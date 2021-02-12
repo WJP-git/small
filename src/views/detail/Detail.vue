@@ -1,137 +1,178 @@
 <template>
-  <div>
-    <detail-nav-bar />
-    <scroll class="content" ref="scroll">
-      <detail-swiper :topImages="topImages" />
-      <detail-base-info :goods="goods" />
-      <detail-shop-info :shop="shop" />
-      <detail-goods-info :imagesInfo="detailInfo" @imgLoad="imgLoad" />
-      <detail-param-info ref="params" :param-info="paramInfo" />
-      <detail-comment-info ref="comment" :comment-info="commentInfo" />
-      <goods-list :goods="recommends" ref="recommend" />
+  <div class="detail">
+    <detail-nav-bar
+      @navItemClick="navItemClick"
+      ref="navBar"
+    />
+    <scroll class="scroll" ref="scrollView" @scrollContent="scrollContent">
+      <detail-swiper :swiperImg="swiper" />
+      <detail-base-info :baseInfo="goodsBaseInfo" />
+      <detail-shop-info :shopInfo="shopInfo" />
+      <detail-commod-img :detailInfo="detailInfo" @imgLoad="imgLoad" />
+      <detail-params ref="params" :paramsInfo="paramsInfo" />
+      <detail-comment-info ref="comment" :commentInfo="commentInfo" />
+      <goods-list ref="recommend" :list="recommends" />
     </scroll>
-    <detail-bottom-bar @click.native="addToCart" />
-    <back-top></back-top>
+    <detail-bottom @addCart='addCart'/>
   </div>
 </template>
 
 <script>
-import DetailNavBar from "./children/DetailNavBar";
-import DetailSwiper from "./children/DetailSwiper";
-import DetailBaseInfo from "./children/DetailBaseInfo";
-import DetailShopInfo from "./children/DetailShopInfo";
-import DetailGoodsInfo from "./children/DetailGoodsInfo";
-import DetailParamInfo from "./children/DetailParamInfo";
-import DetailCommentInfo from "./children/DetailCommentInfo";
-import DetailBottomBar from "./children/DetailBottomBar";
-import GoodsList from "components/content/goods/GoodsList";
-import BackTop from "components/content/backTop/BackTop";
+// -------------------自定义------------------------
 
-import Scroll from "components/common/scroll/Scroll";
-// import { debounce } from "common/utils.js";
+import DetailNavBar from "./childComps/DetailNavBar";
+import DetailSwiper from "./childComps/DetailSwiper";
+import DetailBaseInfo from "./childComps/DetailBaseInfo";
+import DetailShopInfo from "./childComps/DetailShopInfo";
+import DetailCommodImg from "./childComps/DetailCommodImg";
+import DetailParams from "./childComps/DetailParams";
+import DetailCommentInfo from "./childComps/DetailCommentInfo";
+import GoodsList from "@/components/goods/GoodsList";
+import DetailBottom from "./childComps/DetailBottom";
+import Scroll from "@/components/scroll/Scroll";
+
+import {mapActions} from 'vuex'
+// -------------------网络请求------------------------
 import {
-  getDetail,
-  Goods,
-  Shop,
+  getDetailSwiper,
+  GoodsBaseInfo,
+  ShopInfo,
   GoodsParams,
-  getRecommend,
-} from "network/detail.js";
+  getDetailRecommend,
+} from "@/network/detail";
+
 export default {
   name: "Detail",
-  data() {
-    return {
-      iid: null,
-      topImages: [],
-      goods: {},
-      shop: {},
-      detailInfo: {},
-      paramInfo: {},
-      commentInfo: {},
-      recommends: [],
-      // themeTopYs: [],
-      // getThemeTopY: null,
-      isShowBackTop: false,
-    };
-  },
   components: {
     DetailNavBar,
     DetailSwiper,
     DetailBaseInfo,
     DetailShopInfo,
-    DetailGoodsInfo,
-    DetailParamInfo,
+    DetailCommodImg,
+    DetailParams,
     DetailCommentInfo,
-    DetailBottomBar,
     GoodsList,
-    BackTop,
+    DetailBottom,
     Scroll,
   },
-  created() {
-    this.iid = this.$route.params.iid;
-    getDetail(this.iid).then((res) => {
-      const data = res.result;
-      this.topImages = data.itemInfo.topImages;
-      this.goods = new Goods(
-        data.itemInfo,
-        data.columns,
-        data.shopInfo.services
-      );
-      this.shop = new Shop(data.shopInfo);
-      this.detailInfo = data.detailInfo;
-      this.paramInfo = new GoodsParams(
-        data.itemParams.info,
-        data.itemParams.rule
-      );
-      if (data.rate.cRate !== 0) {
-        this.commentInfo = data.rate.list[0];
-      }
-    });
-    getRecommend().then((res) => {
-      this.recommends = res.data.list;
-    });
-    // this.getThemeTopY = debounce(() => {
-    //   this.themeTopYs = [];
-    //   this.themeTopYs.push(0);
-    //   this.themeTopYs.push(this.$refs.params.$el.offsetTop);
-    //   this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
-    //   this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
-    //   console.log(this.themeTopYs);
-    // }, 100);
+  data() {
+    return {
+      swiper: [],
+      goodsBaseInfo: {},
+      shopInfo: {},
+      detailInfo: [],
+      paramsInfo: {},
+      commentInfo: {},
+      recommends: [],
+      themeTopYs: [],
+    };
   },
-  mounted() {},
+  created() {
+    this.detailSwiper(this.$route.params.iid);
+    this.detailRecommend();
+  },
+
   methods: {
+    // -------------------网络请求------------------------
+    // 获取详情数据
+    detailSwiper(iid) {
+      getDetailSwiper({ iid }).then((res) => {
+        const data = res.result;
+        // 轮播图
+        this.swiper = data.itemInfo.topImages;
+        // 基本信息
+        this.goodsBaseInfo = new GoodsBaseInfo(
+          data.itemInfo,
+          data.columns,
+          data.shopInfo.services
+        );
+        // 商店信息
+        this.shopInfo = new ShopInfo(data.shopInfo);
+        // 商品图片信息
+        this.detailInfo = data.detailInfo.detailImage[0].list;
+        // 商品参数信息
+        this.paramsInfo = new GoodsParams(data.itemParams.info, data.itemParams.rule);
+        // 评论信息
+        if (data.rate.cRate !== 0) {
+          this.commentInfo = data.rate.list[0];
+        }
+      });
+    },
+    // 获取推荐数据
+    detailRecommend() {
+      getDetailRecommend().then((res) => {
+        this.recommends = res.data.list;
+      });
+    },
+    // -------------------自定义------------------------
+    // 监听图片加载
     imgLoad() {
-      this.$refs.scroll.refresh();
+      this.$refs.scrollView.refresh();
+      // console.log(this.$refs.scrollView);
     },
-    navClick() {
-      // this.$refs.scroll.scrollTo();
-      this.getThemeTopY();
+    // 点击NavBar中item跳转到相应的内容上
+    navItemClick(i) {
+      this.$refs.scrollView.scrollTo(0, -this.themeTopYs[i], 500);
     },
-    // contentScroll(position) {
-    //   const positionY = -position.y;
-    // },
-    addToCart() {
-      const obj = {};
-      obj.img = this.topImages[0];
-      obj.title = this.goods.title;
-      obj.desc = this.goods.desc;
-      obj.price = this.goods.newPrice;
-      obj.iid = this.iid;
-      this.$store.commit("addCart", obj);
+    // 滚动到一定距离后NavBar字体变色
+    scrollContent(y) {
+      this.scrollTheme(y)
     },
+    scrollTheme(y) {
+      let scrollY = -y;
+      for (let i = 0; i < this.themeTopYs.length; i++) {
+        let pos = this.themeTopYs[i];
+        if (scrollY >= pos && scrollY < this.themeTopYs[i + 1]) {
+          // if (this.$refs.navBar.currentIndex !== i) {
+            this.$refs.navBar.currentIndex = i;
+          // }
+        }
+      }
+    },
+    // 商品添加到购物车
+    ...mapActions([
+      'setAddCart'
+    ]),
+    addCart(){
+      let obj = {}
+      obj.iid = this.$route.params.iid
+      obj.img = this.swiper[0]
+      obj.title = this.goodsBaseInfo.title
+      obj.desc = this.goodsBaseInfo.desc
+      obj.price = this.goodsBaseInfo.nowPrice
+      this.setAddCart(obj)
+    }
+  },
+  mounted() {
+    this.$nextTick(() => {
+      setTimeout(() => {
+        this.themeTopYs.push(0);
+        this.themeTopYs.push(this.$refs.params.$el.offsetTop);
+        this.themeTopYs.push(this.$refs.comment.$el.offsetTop);
+        this.themeTopYs.push(this.$refs.recommend.$el.offsetTop);
+        this.themeTopYs.push(Number.MAX_VALUE);
+      }, 50);
+    });
   },
 };
 </script>
 
-<style scoped>
-.content {
-  position: absolute;
-  top: 44px;
-  bottom: 49px;
-  left: 0;
-  right: 0;
-  overflow: hidden;
+<style lang="less" scoped>
+.detail {
+  width: 100vw;
+  height: 100vh;
   background: #fff;
+  position: relative;
   z-index: 99;
+  overflow: hidden;
+  .scroll {
+    position: absolute;
+    z-index: -1;
+    top: 44px;
+    left: 0;
+    right: 0;
+    // bottom: 0;
+    bottom: 50px;
+  }
 }
 </style>

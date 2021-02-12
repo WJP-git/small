@@ -1,39 +1,23 @@
 import Vue from 'vue'
 import VueRouter from 'vue-router'
 
-
-const Home = () => import('views/home/Home')
-const Cart = () => import('views/cart/Cart')
-const Category = () => import('views/category/Category')
-const Profile = () => import('views/profile/Profile')
-const Detail = () => import('views/detail/Detail')
+const Home = () => import('@/views/home/Home')
+const Cart = () => import('@/views/cart/Cart')
+const Category = () => import('@/views/category/Category')
+const Profile = () => import('@/views/profile/Profile')
+const Detail = () => import('@/views/detail/Detail')
 Vue.use(VueRouter)
 
 const routes = [
-  {
-    path: '',
-    redirect: '/home'
-  },
-  {
-    path: '/home',
-    component: Home
-  },
-  {
-    path: '/cart',
-    component: Cart
-  },
-  {
-    path: '/category',
-    component: Category
-  },
-  {
-    path: '/profile',
-    component: Profile
-  },
-  {
-    path: '/detail/:iid',
-    component: Detail
-  }
+  { path: '/', redirect: '/home' },
+  { path: '/home', name: 'Home', component: Home},
+  { path: '/category', name: 'Category', component: Category },
+  { path: '/cart', name: 'Cart', component: Cart },
+  { path: '/profile', name: 'Profile', component: Profile },
+  { path: '/detail/:iid', name: 'Detail', component: Detail },
+
+
+
 ]
 
 const router = new VueRouter({
@@ -41,5 +25,9 @@ const router = new VueRouter({
   base: process.env.BASE_URL,
   routes
 })
+// router.beforeEach((to, from, next) => {
+//   document.title = to.matched[0].meta.title
+//   next();
+// })
 
 export default router

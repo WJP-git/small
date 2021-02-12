@@ -1,17 +1,4 @@
-import { request } from './request'
-export function getHomeMultidata() {
-    return request({
-        url: '/home/multidata'
-    })
-}
-
-
-export function getHomeGoods(type, page) {
-    return request({
-        url: '/home/data',
-        params: {
-            type,
-            page
-        }
-    })
-}
+import Network from '@/network/request'
+// 轮播图
+export const getHomeSwiper = ()=> Network.get('/home/multidata')
+export const getHomeGoods = (data)=> Network.get('/home/data',data)

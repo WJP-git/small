@@ -1,20 +1,26 @@
 import axios from "axios";
-export function request(config) {
-    const instance = axios.create({
-        baseURL: '......',
-        timeout: 5000
-    })
+axios.defaults.baseURL = 'http://152.136.185.210:8000/api/w6'
+axios.defaults.timeout = 5000
+export default {
+    get(path = '',data = {}){
+       return new Promise((resolve,reject)=>{
+            axios.get(path,{
+                params:data
+            }).then(res=>{
+                resolve(res.data)
+            }).catch(err=>{
+                reject(err)
+            })
+        })
+    },
+    post(path = '',data = {}){
+        return new Promise((resolve,reject)=>{
+            axios.post(path,data).then(res=>{
+                resolve(res.data)
+            }).catch(err=>{
+                reject(err)
+            })
 
-    instance.interceptors.request.use((config) => {
-        return config
-    }, err => {
-        console.log(err);
-    })
-    instance.interceptors.response.use((res) => {
-        return res.data
-    }, err => {
-        console.log(err);
-
-    })
-    return instance(config)
+        })
+    }
 }
