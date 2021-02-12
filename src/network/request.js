@@ -1,5 +1,5 @@
 import axios from "axios";
-axios.defaults.baseURL = 'http://152.136.185.210:8000/api/w6'
+axios.defaults.baseURL = '...'
 axios.defaults.timeout = 5000
 export default {
     get(path = '',data = {}){
